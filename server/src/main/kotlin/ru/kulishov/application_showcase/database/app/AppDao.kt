@@ -1,0 +1,90 @@
+package ru.kulishov.application_showcase.database.app
+
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
+import ru.kulishov.application_showcase.database.category.Categories
+import ru.kulishov.application_showcase.database.query
+
+class AppDao {
+    private fun rowApp(row: ResultRow) = App(
+        id = row[Apps.id],
+        name =row[Apps.name],
+        author = row[Apps.author],
+        category = row[Apps.category],
+        grade = row[Apps.grade],
+        gradesCount = row[Apps.grades_count],
+        age = row[Apps.age],
+        description = row[Apps.description],
+        short_description = row[Apps.short_description]
+    )
+
+    private fun rowAppMetadata(row: ResultRow) = AppMetadata(
+        id = row[Apps.id],
+        name =row[Apps.name],
+        category = row[Apps.category],
+        grade = row[Apps.grade],
+        short_description = row[Apps.short_description]
+    )
+
+    suspend fun addApp(app:App) = query {
+        Apps.insert {
+            it[name]= app.name
+            it[author] = app.author
+            it[category] = app.category
+            it[grade] = app.grade
+            it[grades_count] = app.gradesCount
+            it[age] = app.age
+            it[description] = app.description
+            it[short_description] = app.short_description
+        }
+    }
+
+    suspend fun deleteApp(id:Int) = query {
+        Apps.deleteWhere { Apps.id eq id}
+    }
+
+    suspend fun updateApp(app:App) = query {
+        Apps.update ({ Apps.id eq app.id }){
+            it[name]= app.name
+            it[author] = app.author
+            it[category] = app.category
+            it[grade] = app.grade
+            it[grades_count] = app.gradesCount
+            it[age] = app.age
+            it[description] = app.description
+            it[short_description] = app.short_description
+        }
+    }
+
+    suspend fun getAppByCategory(id:Int, limit:Int):List<AppMetadata> = query {
+        return@query Apps.select(
+            Apps.id,
+            Apps.name,
+            Apps.category,
+            Apps.grade,
+            Apps.short_description
+        ).where{
+            Apps.category eq id
+        }.limit(limit).map { rowAppMetadata(it) }
+    }
+
+    suspend fun getPopularApp( limit:Int):List<AppMetadata> = query {
+        return@query Apps.select(
+            Apps.id,
+            Apps.name,
+            Apps.category,
+            Apps.grade,
+            Apps.short_description
+        ).orderBy(Apps.grade to SortOrder.DESC).limit(limit).map { rowAppMetadata(it) }
+    }
+
+    suspend fun getApp(id:Int): App? = query {
+        return@query Apps.selectAll().where{ Apps.id eq id }.map { rowApp(it) }.singleOrNull()
+    }
+}
