@@ -8,6 +8,7 @@ import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import ru.kulishov.application_showcase.database.add.Adds
 import ru.kulishov.application_showcase.database.app.Apps
+import ru.kulishov.application_showcase.database.app.Logos
 import ru.kulishov.application_showcase.database.category.Categories
 import ru.kulishov.application_showcase.database.photo.Photos
 import ru.kulishov.application_showcase.database.storie.Stories
@@ -27,6 +28,7 @@ object DBFactory {
             SchemaUtils.create(Stories)
             SchemaUtils.create(Adds)
             SchemaUtils.create(Photos)
+            SchemaUtils.create(Logos)
         }
     }
 }

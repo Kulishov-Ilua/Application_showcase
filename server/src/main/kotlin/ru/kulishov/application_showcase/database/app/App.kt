@@ -19,6 +19,19 @@ object Apps: Table(){
 
 }
 
+object Logos: Table(){
+    val id = integer("id").autoIncrement()
+    val app_id = integer("app_id").references(Apps.id)
+    val logo = binary("logo")
+}
+
+@Serializable
+data class Logo(
+    val id: Int,
+    val appId: Int,
+    val logo: ByteArray
+)
+
 @Serializable
 data class App(
     val id:Int,

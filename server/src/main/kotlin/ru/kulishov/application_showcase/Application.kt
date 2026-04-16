@@ -15,7 +15,9 @@ import ru.kulishov.application_showcase.database.app.AppDao
 import ru.kulishov.application_showcase.database.category.CategoryDao
 import ru.kulishov.application_showcase.database.photo.PhotoDao
 import ru.kulishov.application_showcase.database.storie.StoryDao
+import ru.kulishov.application_showcase.routing.configureAppRouting
 import ru.kulishov.application_showcase.routing.configureCategoryRouting
+import ru.kulishov.application_showcase.routing.configureMediaRouting
 
 fun main(args: Array<String>) {
     io.ktor.server.netty.EngineMain.main(args)
@@ -42,6 +44,8 @@ fun Application.module() {
     val addDao = AddDao()
 
     configureCategoryRouting(categoryDao)
+    configureAppRouting(appDao)
+    configureMediaRouting(photoDao,storyDao,addDao)
 
     routing {
         get("/") {

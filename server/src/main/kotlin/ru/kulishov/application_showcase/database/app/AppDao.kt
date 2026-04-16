@@ -24,6 +24,12 @@ class AppDao {
         short_description = row[Apps.short_description]
     )
 
+    private fun rowLogo(row: ResultRow) = Logo(
+        id = row[Logos.id],
+        appId = row[Logos.app_id],
+        logo = row[Logos.logo]
+    )
+
     private fun rowAppMetadata(row: ResultRow) = AppMetadata(
         id = row[Apps.id],
         name =row[Apps.name],
@@ -43,6 +49,22 @@ class AppDao {
             it[description] = app.description
             it[short_description] = app.short_description
         }
+    }
+
+    suspend fun addAppIcon(data: Logo) = query {
+        Logos.insert {
+            it[app_id]=data.appId
+            it[logo]=data.logo
+        }
+    }
+    suspend fun updateAppIcon(data: Logo) = query {
+        Logos.update({ Logos.id eq data.id}) {
+            it[app_id]=data.appId
+            it[logo]=data.logo
+        }
+    }
+    suspend fun getLogo(id:Int): Logo? = query {
+        return@query Logos.selectAll().where { Logos.app_id eq id }.map { rowLogo(it) }.singleOrNull()
     }
 
     suspend fun deleteApp(id:Int) = query {

@@ -8,7 +8,7 @@ import ru.kulishov.application_showcase.database.app.Apps
 import ru.kulishov.application_showcase.database.photo.Photos
 
 object Adds: Table(){
-    val id = long("id")
+    val id = long("id").autoIncrement()
     val app_id = integer("app_id").references(Apps.id)
     val photo_id = long("photo_id").references(Photos.id)
     val createdAt = datetime("createdAt")

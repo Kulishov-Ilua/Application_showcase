@@ -1,6 +1,7 @@
 package ru.kulishov.application_showcase.database.photo
 
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -44,7 +45,7 @@ class PhotoDao {
     }
 
     suspend fun getPhotoByApp(id:Int):List<Long> =query {
-        return@query Photos.select(Photos.id).where{ Photos.app_id eq id }.map { it[Photos.id] }
+        return@query Photos.select(Photos.id).where{ (Photos.app_id eq id) and  (Photos.is_view eq true)}.map { it[Photos.id] }
     }
 
     suspend fun getPhotoById(id: Long): Photo? = query {
