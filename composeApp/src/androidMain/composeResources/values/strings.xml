@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">AppShowcase</string>
+    <string name="hello">Hello!</string>
+    <string name="to_application">To the applications!</string>
+    <string name="install">Install</string>
+    <string name="find_app">Find application</string>
+    <string name="actual">Actual:</string>
+    <string name="category">Category</string>
+    <string name="popular">Popular</string>
+
+</resources>

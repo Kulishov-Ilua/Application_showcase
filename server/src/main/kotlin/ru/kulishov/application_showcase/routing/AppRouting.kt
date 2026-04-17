@@ -57,6 +57,16 @@ fun Application.configureAppRouting(
             }
 
         }
+        get("/searchApp/{text}"){
+            val encodedName = call.parameters["text"] ?: ""
+            val text = URLDecoder.decode(encodedName, "UTF-8")
+            if(text!=null){
+                call.respond(appDao.searchApp(text))
+            }else{
+                call.respond(HttpStatusCode.BadRequest)
+            }
+
+        }
 
         get("/getCategoryApp/{id}/{limit}"){
             val limit = call.parameters["limit"]?.toIntOrNull()
@@ -72,6 +82,18 @@ fun Application.configureAppRouting(
             val id = call.parameters["id"]?.toIntOrNull()
             if(id!=null){
                 val app = appDao.getApp(id)
+                if(app!=null){
+                    call.respond(app)
+                }else call.respond(HttpStatusCode.NotFound)
+            }else{
+                call.respond(HttpStatusCode.BadRequest)
+            }
+        }
+
+        get("/getAppMetadata/{id}"){
+            val id = call.parameters["id"]?.toIntOrNull()
+            if(id!=null){
+                val app = appDao.getAppMetadata(id)
                 if(app!=null){
                     call.respond(app)
                 }else call.respond(HttpStatusCode.NotFound)

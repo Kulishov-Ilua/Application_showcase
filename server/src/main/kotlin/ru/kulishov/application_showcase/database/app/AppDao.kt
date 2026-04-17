@@ -3,6 +3,8 @@ package ru.kulishov.application_showcase.database.app
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.like
+import org.jetbrains.exposed.v1.core.lowerCase
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
@@ -96,6 +98,30 @@ class AppDao {
         }.limit(limit).map { rowAppMetadata(it) }
     }
 
+    suspend fun searchApp(text:String): List<AppMetadata> = query {
+        var ret = mutableListOf<AppMetadata>()
+        ret += Apps.select(
+            Apps.id,
+            Apps.name,
+            Apps.category,
+            Apps.grade,
+            Apps.short_description
+        ).where{
+            Apps.name.lowerCase() like "%${text.lowercase()}%"
+        }.limit(10).map { rowAppMetadata(it) }
+
+        if(ret.size<10){
+            ret+=Apps.select(
+                Apps.id,
+                Apps.name,
+                Apps.category,
+                Apps.grade,
+                Apps.short_description
+            ).orderBy(Apps.grade to SortOrder.DESC).limit(10-ret.size).map { rowAppMetadata(it) }
+        }
+        return@query ret
+    }
+
     suspend fun getPopularApp( limit:Int):List<AppMetadata> = query {
         return@query Apps.select(
             Apps.id,
@@ -104,6 +130,16 @@ class AppDao {
             Apps.grade,
             Apps.short_description
         ).orderBy(Apps.grade to SortOrder.DESC).limit(limit).map { rowAppMetadata(it) }
+    }
+
+    suspend fun getAppMetadata( id:Int):AppMetadata? = query {
+        return@query Apps.select(
+            Apps.id,
+            Apps.name,
+            Apps.category,
+            Apps.grade,
+            Apps.short_description
+        ).where{ Apps.id eq id }.map { rowAppMetadata(it) }.singleOrNull()
     }
 
     suspend fun getApp(id:Int): App? = query {
