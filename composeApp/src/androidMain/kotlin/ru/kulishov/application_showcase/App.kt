@@ -1,52 +1,46 @@
 package ru.kulishov.application_showcase
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.BitmapFactory
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBar
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import org.jetbrains.compose.resources.painterResource
-
 import application_showcase.composeapp.generated.resources.Res
-import application_showcase.composeapp.generated.resources.compose_multiplatform
-import ru.kulishov.application_showcase.data.remote.repository.AppMetadataRepositoryImpl
-import ru.kulishov.application_showcase.data.remote.repository.CategoryRepositoryImpl
-import ru.kulishov.application_showcase.data.remote.repository.LogoRepositoryImpl
-import ru.kulishov.application_showcase.domain.usecase.app_metadata.GetCategoryAppUseCase
-import ru.kulishov.application_showcase.domain.usecase.app_metadata.GetPopularAppUseCase
-import ru.kulishov.application_showcase.domain.usecase.app_metadata.SearchAppUseCase
-import ru.kulishov.application_showcase.domain.usecase.category.GetCategoryUseCase
-import ru.kulishov.application_showcase.domain.usecase.logo.GetLogoUseCase
+import application_showcase.composeapp.generated.resources.categorynav
+import application_showcase.composeapp.generated.resources.home
+import application_showcase.composeapp.generated.resources.profile
+import application_showcase.composeapp.generated.resources.shop
 import ru.kulishov.application_showcase.presentation.AppTheme
+import ru.kulishov.application_showcase.presentation.category_screen.CategoryScreenUI
 import ru.kulishov.application_showcase.presentation.home_screen.HomeScreenUI
-import ru.kulishov.application_showcase.presentation.home_screen.HomeScreenViewModel
-import ru.kulishov.application_showcase.presentation.navigation.HomeScreen
-import ru.kulishov.application_showcase.presentation.navigation.PreviewScreen
+import ru.kulishov.application_showcase.presentation.navigation.NavigationElement
+import ru.kulishov.application_showcase.presentation.navigation.NavigationRoutings
 import ru.kulishov.application_showcase.presentation.preview_screen.PreviewScreenUI
-import ru.kulishov.application_showcase.presentation.uikit.SearchBox
+import ru.kulishov.application_showcase.presentation.uikit.NavigationPanel
 
 
 @Composable
@@ -56,36 +50,108 @@ fun App() {
     val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
     var isFirst by remember { mutableStateOf(prefs.getBoolean("isFirstRun", true)) }
     val navController = rememberNavController()
+    var showBottomBar by remember { mutableStateOf(true) }
+
     AppTheme {
-        Scaffold (
+        Scaffold(
             containerColor = MaterialTheme.colorScheme.surface,
-            content = {
-                padding ->
-                        NavHost(navController = navController, startDestination = if(isFirst) PreviewScreen else HomeScreen){
-                            composable<PreviewScreen> {
-                                LaunchedEffect(1) {
-                                    prefs.edit().putBoolean("isFirstRun", false).apply()
+            bottomBar = {
+                AnimatedVisibility(
+                    visible = showBottomBar,
+                    enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                    exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+                    modifier = Modifier.padding(horizontal = 15.dp)
+                ) {
+                    NavigationPanel(
+                        navigationElements = listOf(
+                            NavigationElement(
+                                NavigationRoutings.HomeScreen,
+                                Res.drawable.home,
+                                "Главная"
+                            ),
+                            NavigationElement(
+                                NavigationRoutings.CategoryScreen,
+                                Res.drawable.categorynav,
+                                "Категории"
+                            ),
+                            NavigationElement(
+                                NavigationRoutings.ShopScreen,
+                                Res.drawable.shop,
+                                "Магазин"
+                            ),
+                            NavigationElement(
+                                NavigationRoutings.ProfileScreen,
+                                Res.drawable.profile,
+                                "Профиль"
+                            ),
+                        ),
+                        start = NavigationRoutings.HomeScreen,
+                        onNavigate = { routing ->
+                            navController.navigate(routing) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
                                 }
-                                Box(Modifier.padding(padding).fillMaxSize()){1
-                                    PreviewScreenUI {
-                                        navController.navigate(HomeScreen)
-                                    }
-                                }
-
-                            }
-                            composable<HomeScreen>{
-
-                                HomeScreenUI(padding = padding)
+                                launchSingleTop = true
+                                restoreState = true
                             }
                         }
+                    )
+                }
+            },
+            content = { padding ->
+                NavHost(
+                    navController = navController,
+                    startDestination = if (isFirst) NavigationRoutings.PreviewScreen else NavigationRoutings.HomeScreen,
+                    modifier = Modifier.padding(horizontal = 15.dp)
+                ) {
+                    composable<NavigationRoutings.PreviewScreen> {
+                        LaunchedEffect(1) {
+                            prefs.edit().putBoolean("isFirstRun", false).apply()
+                            showBottomBar = false
+                        }
+                        Box(
+                            Modifier
+                                .padding(padding)
+                                .fillMaxSize()
+                        ) {
+                            1
+                            PreviewScreenUI {
+                                navController.navigate(NavigationRoutings.HomeScreen)
+                            }
+                        }
+                        DisposableEffect(Unit) {
+                            onDispose {
+                                showBottomBar = true
+                            }
+                        }
+
+                    }
+                    composable<NavigationRoutings.HomeScreen> {
+
+                        HomeScreenUI(padding = padding)
+                    }
+                    composable<NavigationRoutings.CategoryScreen> {
+                        CategoryScreenUI(padding=padding)
+
+                    }
+                    composable<NavigationRoutings.ShopScreen> {
+
+
+                    }
+                    composable<NavigationRoutings.ProfileScreen> {
+
+
+                    }
+                }
             }
+
         )
 
     }
 }
 
 @Composable
- fun SelectedFile.toImageBitmap(): ImageBitmap? {
+fun SelectedFile.toImageBitmap(): ImageBitmap? {
     return try {
         val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
         bitmap?.asImageBitmap()

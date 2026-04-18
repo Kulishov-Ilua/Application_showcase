@@ -7,4 +7,6 @@
     <string name="actual">Актуальное:</string>
     <string name="category">Категории</string>
     <string name="popular">Популярное</string>
+    <string name="error">Не получилось :(</string>
+    <string name="refresh">Перезагрузить</string>
 </resources>

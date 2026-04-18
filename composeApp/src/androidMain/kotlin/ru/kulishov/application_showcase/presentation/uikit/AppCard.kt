@@ -70,7 +70,7 @@ fun AppCard(
             Box(
                 Modifier
                     .size(50.dp)
-                    .clip(RoundedCornerShape(5))
+                    .clip(RoundedCornerShape(8))
                     .background(if (data.logo == null) targetColor else Color.Transparent),
                 contentAlignment = Alignment.Center
             ) {

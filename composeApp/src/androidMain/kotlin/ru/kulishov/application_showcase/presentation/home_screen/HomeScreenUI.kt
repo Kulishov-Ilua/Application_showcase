@@ -14,10 +14,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -38,6 +40,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import application_showcase.composeapp.generated.resources.Res
 import application_showcase.composeapp.generated.resources.actual
 import application_showcase.composeapp.generated.resources.avatar
@@ -51,9 +54,11 @@ import ru.kulishov.application_showcase.SelectedFile
 import ru.kulishov.application_showcase.domain.model.AppMetadataWithLogo
 import ru.kulishov.application_showcase.domain.model.Category
 import ru.kulishov.application_showcase.domain.model.StoryWithPhoto
+import ru.kulishov.application_showcase.presentation.navigation.NavigationRoutings
 import ru.kulishov.application_showcase.presentation.uikit.AddCard
 import ru.kulishov.application_showcase.presentation.uikit.AppCard
 import ru.kulishov.application_showcase.presentation.uikit.CategoryButton
+import ru.kulishov.application_showcase.presentation.uikit.LoadingElement
 import ru.kulishov.application_showcase.presentation.uikit.SearchBox
 import ru.kulishov.application_showcase.presentation.uikit.StoriesCard
 import ru.kulishov.application_showcase.toImageBitmap
@@ -74,7 +79,6 @@ fun HomeScreenUI(
     var isRefreshing by remember { mutableStateOf(false) }
 
     LaunchedEffect(isRefreshing) {
-        Log.d(null, "update")
         stories=viewModel.getStories()
         add = viewModel.getAdds()
         viewModel.getCategories()
@@ -122,7 +126,6 @@ fun HomeScreenUI(
                     item{
                         Column(
                             verticalArrangement = Arrangement.spacedBy(5.dp),
-                            modifier = Modifier.height(176.dp)
                         ) {
                             Text(
                                 stringResource(Res.string.actual),
@@ -134,13 +137,25 @@ fun HomeScreenUI(
                                 items(stories) {
                                     StoriesCard(it)
                                 }
+                                items(4){
+                                    if(stories.isEmpty()){
+                                        Box(Modifier.width(100.dp).height(145.dp).clip(RoundedCornerShape(4))){
+                                            LoadingElement()
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                     item {
-                        Box(Modifier.height(200.dp)){
-                            if(add.size>0){
+                        Box(){
+                            if(add.isNotEmpty()){
                                 AddCard(add[0])
+                            }else{
+                                Box(Modifier.fillMaxWidth()
+                                    .height(200.dp).clip(RoundedCornerShape(5))){
+                                    LoadingElement()
+                                }
                             }
                         }
 
@@ -149,28 +164,28 @@ fun HomeScreenUI(
                         LazyRow(
                             horizontalArrangement = Arrangement.spacedBy(5.dp)
                         ) {
-                            item {
-                                Box(
-                                    Modifier
-                                        .clip(CircleShape)
-                                        .background(if (currentCategory==-2) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainer)
-                                        .clickable{
-
-                                        },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        Icon(painterResource(Res.drawable.category), "category", tint = MaterialTheme.colorScheme.primary)
-                                        Text(stringResource(Res.string.category), style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp, color =
-                                            MaterialTheme.colorScheme.surface))
-                                    }
-                                }
-
-                            }
+//                            item {
+//                                Box(
+//                                    Modifier
+//                                        .clip(CircleShape)
+//                                        .background(if (currentCategory==-2) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainer)
+//                                        .clickable{
+//                                            onCategoryList()
+//                                        },
+//                                    contentAlignment = Alignment.Center
+//                                ) {
+//                                    Row(
+//                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+//                                        verticalAlignment = Alignment.CenterVertically,
+//                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+//                                    ) {
+//                                        Icon(painterResource(Res.drawable.category), "category", tint = MaterialTheme.colorScheme.primary)
+//                                        Text(stringResource(Res.string.category), style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp, color =
+//                                            MaterialTheme.colorScheme.onSurface))
+//                                    }
+//                                }
+//
+//                            }
                             item {
                                 Box(
                                     Modifier
@@ -192,18 +207,21 @@ fun HomeScreenUI(
 
                                         }
                                           Text(stringResource(Res.string.popular), style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp, color =
-                                            MaterialTheme.colorScheme.surface))
+                                            if(currentCategory==-1) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSurface))
                                     }
                                 }
 
                             }
                             items(categories.value){
-                                Box(Modifier.clip(CircleShape).clickable{
-                                    currentCategory=it.id
-                                    viewModel.getCategoryApp(it.id)
-                                }){
-                                    CategoryButton(it,it.id==currentCategory)
+                                if(it.priority){
+                                    Box(Modifier.clip(CircleShape).clickable{
+                                        currentCategory=it.id
+                                        viewModel.getCategoryApp(it.id)
+                                    }){
+                                        CategoryButton(it,it.id==currentCategory)
+                                    }
                                 }
+
 
                             }
                         }
@@ -214,8 +232,6 @@ fun HomeScreenUI(
                                 AppCard(app)
                             }
                         }
-
-
                     }
                 }
             }

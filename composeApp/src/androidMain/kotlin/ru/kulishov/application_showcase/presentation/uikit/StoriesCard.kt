@@ -48,28 +48,12 @@ fun StoriesCard(story: StoryWithPhoto){
                     contentScale = ContentScale.Crop
                 )
             }else{
-                val infiniteTransition = rememberInfiniteTransition()
-                val targetColor by infiniteTransition.animateColor(
-                    initialValue = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.3f),
-                    targetValue = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.7f),
-                    animationSpec = infiniteRepeatable(
-                        animation = tween(800, easing = FastOutSlowInEasing),
-                        repeatMode = RepeatMode.Reverse
-                    )
-                )
-                Box(Modifier.fillMaxSize().background(targetColor))
+
+                LoadingElement()
             }
         }else{
-            val infiniteTransition = rememberInfiniteTransition()
-            val targetColor by infiniteTransition.animateColor(
-                initialValue = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.3f),
-                targetValue = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.7f),
-                animationSpec = infiniteRepeatable(
-                    animation = tween(800, easing = FastOutSlowInEasing),
-                    repeatMode = RepeatMode.Reverse
-                )
-            )
-            Box(Modifier.fillMaxSize().background(targetColor))
+
+            LoadingElement()
         }
 
         Row(
