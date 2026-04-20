@@ -70,13 +70,13 @@ fun AppTheme(content: @Composable () -> Unit) {
             bodyMedium = TextStyle(
                 fontSize = 16.sp,
                 color = currentColorScheme.onSurface,
-                fontWeight = FontWeight.Light,
+                fontWeight = FontWeight.Normal,
                 letterSpacing = (26.sp * 0.02f)
             ),
             bodySmall = TextStyle(
                 fontSize = 11.sp,
                 color = currentColorScheme.onSurface,
-                fontWeight = FontWeight.Light,
+                fontWeight = FontWeight.Normal,
             ),
         )
     )

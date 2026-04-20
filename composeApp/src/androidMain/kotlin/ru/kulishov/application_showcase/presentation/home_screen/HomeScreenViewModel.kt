@@ -189,9 +189,16 @@ class HomeScreenViewModel @Inject constructor(
         return ret
     }
 
+    fun openStory(){
+        _uiState.value= HomeScreenUiState.Story
+    }
+    fun closeStory(){
+        _uiState.value= HomeScreenUiState.Success
+    }
 
     sealed class HomeScreenUiState {
         object Loading : HomeScreenUiState()
+        object Story : HomeScreenUiState()
         object Success : HomeScreenUiState()
         data class Error(val e: String) : HomeScreenUiState()
     }

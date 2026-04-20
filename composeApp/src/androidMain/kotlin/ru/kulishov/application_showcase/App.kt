@@ -25,16 +25,17 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import application_showcase.composeapp.generated.resources.Res
 import application_showcase.composeapp.generated.resources.categorynav
 import application_showcase.composeapp.generated.resources.home
 import application_showcase.composeapp.generated.resources.profile
 import application_showcase.composeapp.generated.resources.shop
 import ru.kulishov.application_showcase.presentation.AppTheme
+import ru.kulishov.application_showcase.presentation.app_screen.AppScreenUI
 import ru.kulishov.application_showcase.presentation.category_screen.CategoryScreenUI
 import ru.kulishov.application_showcase.presentation.home_screen.HomeScreenUI
 import ru.kulishov.application_showcase.presentation.navigation.NavigationElement
@@ -88,9 +89,9 @@ fun App() {
                         start = NavigationRoutings.HomeScreen,
                         onNavigate = { routing ->
                             navController.navigate(routing) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
+//                                popUpTo(navController.graph.findStartDestination().id) {
+//                                    saveState = true
+//                                }
                                 launchSingleTop = true
                                 restoreState = true
                             }
@@ -102,7 +103,6 @@ fun App() {
                 NavHost(
                     navController = navController,
                     startDestination = if (isFirst) NavigationRoutings.PreviewScreen else NavigationRoutings.HomeScreen,
-                    modifier = Modifier.padding(horizontal = 15.dp)
                 ) {
                     composable<NavigationRoutings.PreviewScreen> {
                         LaunchedEffect(1) {
@@ -128,10 +128,37 @@ fun App() {
                     }
                     composable<NavigationRoutings.HomeScreen> {
 
-                        HomeScreenUI(padding = padding)
+                        HomeScreenUI(padding = padding, openApp = {
+                            navController.navigate(
+                                NavigationRoutings.AppScreen(it.id)
+                            ) {
+//                            popUpTo(navController.graph.findStartDestination().id) {
+//                                saveState = true
+//                            }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }, hideNavigation = { state ->
+                            if (state) {
+                                showBottomBar = false
+                            } else {
+                                showBottomBar = true
+                            }
+                        }
+                        )
                     }
                     composable<NavigationRoutings.CategoryScreen> {
-                        CategoryScreenUI(padding=padding)
+                        CategoryScreenUI(padding = padding, openApp = {
+                            navController.navigate(
+                                NavigationRoutings.AppScreen(it.id)
+                            ) {
+//                            popUpTo(navController.graph.findStartDestination().id) {
+//                                saveState = true
+//                            }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        })
 
                     }
                     composable<NavigationRoutings.ShopScreen> {
@@ -141,6 +168,22 @@ fun App() {
                     composable<NavigationRoutings.ProfileScreen> {
 
 
+                    }
+                    composable<NavigationRoutings.AppScreen> { backStackEntry ->
+                        val id = backStackEntry.toRoute<NavigationRoutings.AppScreen>().id
+
+                        //val category = backStackEntry.toRoute<NavigationRoutings.AppScreen>().category
+                        AppScreenUI(
+                            startApp = id,
+                            padding = padding,
+                            onBack = { navController.popBackStack() },
+                            hideNavigation = { state ->
+                                if (state) {
+                                    showBottomBar = false
+                                } else {
+                                    showBottomBar = true
+                                }
+                            })
                     }
                 }
             }

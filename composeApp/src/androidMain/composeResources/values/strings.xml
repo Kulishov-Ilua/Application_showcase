@@ -9,5 +9,7 @@
     <string name="popular">Popular</string>
     <string name="error">Error</string>
     <string name="refresh">Refresh</string>
+    <string name="description">Description</string>
+    <string name="album">Album:</string>
 
 </resources>

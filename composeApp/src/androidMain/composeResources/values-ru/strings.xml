@@ -9,4 +9,6 @@
     <string name="popular">Популярное</string>
     <string name="error">Не получилось :(</string>
     <string name="refresh">Перезагрузить</string>
+    <string name="description">Описание</string>
+    <string name="album">Альбом:</string>
 </resources>

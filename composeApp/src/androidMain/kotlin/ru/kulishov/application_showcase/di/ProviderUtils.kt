@@ -6,12 +6,14 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import ru.kulishov.application_showcase.data.remote.repository.AddRepositoryImpl
 import ru.kulishov.application_showcase.data.remote.repository.AppMetadataRepositoryImpl
+import ru.kulishov.application_showcase.data.remote.repository.AppRepositoryImpl
 import ru.kulishov.application_showcase.data.remote.repository.CategoryRepositoryImpl
 import ru.kulishov.application_showcase.data.remote.repository.LogoRepositoryImpl
 import ru.kulishov.application_showcase.data.remote.repository.PhotoRepositoryImpl
 import ru.kulishov.application_showcase.data.remote.repository.StoryRepositoryImpl
 import ru.kulishov.application_showcase.domain.repository.AddRepository
 import ru.kulishov.application_showcase.domain.repository.AppMetadataRepository
+import ru.kulishov.application_showcase.domain.repository.AppRepository
 import ru.kulishov.application_showcase.domain.repository.CategoryRepository
 import ru.kulishov.application_showcase.domain.repository.LogoRepository
 import ru.kulishov.application_showcase.domain.repository.PhotoRepository
@@ -56,5 +58,11 @@ abstract class RepositoryModule {
     abstract fun bindAddRepository(
         impl: AddRepositoryImpl
     ): AddRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAppRepository(
+        impl: AppRepositoryImpl
+    ): AppRepository
 
 }

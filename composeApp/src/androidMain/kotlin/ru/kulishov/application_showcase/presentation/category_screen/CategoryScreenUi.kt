@@ -34,6 +34,7 @@ import application_showcase.composeapp.generated.resources.Res
 import application_showcase.composeapp.generated.resources.arrow_back
 import application_showcase.composeapp.generated.resources.avatar
 import org.jetbrains.compose.resources.painterResource
+import ru.kulishov.application_showcase.domain.model.AppMetadataWithLogo
 import ru.kulishov.application_showcase.presentation.uikit.AppCard
 import ru.kulishov.application_showcase.presentation.uikit.CategoryCard
 import ru.kulishov.application_showcase.presentation.uikit.ErrorScreen
@@ -43,7 +44,8 @@ import ru.kulishov.application_showcase.presentation.uikit.SearchBox
 @Composable
 fun CategoryScreenUI(
     viewModel: CategoryScreenViewModel = hiltViewModel(),
-    padding: PaddingValues
+    padding: PaddingValues,
+    openApp:(AppMetadataWithLogo)->Unit
 ) {
     var categories = viewModel.category.collectAsState()
     var apps = viewModel.apps.collectAsState()
@@ -65,7 +67,8 @@ fun CategoryScreenUI(
         isRefreshing = isRefreshing,
         onRefresh = {
             isRefreshing = true
-        }
+        },
+        modifier = Modifier.padding(horizontal = 15.dp)
     ) {
         Column(
             modifier = Modifier.padding(padding),
@@ -97,7 +100,12 @@ fun CategoryScreenUI(
                     LazyColumn {
                         items(searchApp.value) { app ->
                             val fIcon = categories.value.find { it.id == app.category }?.icon
-                            AppCard(app, fIcon)
+                            Box(Modifier.clickable{
+                                openApp(app)
+                            }){
+                                AppCard(app, fIcon)
+                            }
+
                         }
                     }
                 } else {
@@ -144,7 +152,9 @@ fun CategoryScreenUI(
                     CategoryScreenViewModel.CategoryScreenUiState.Apps -> {
                         LazyColumn {
                             items(apps.value){
-                                Box(){
+                                Box(Modifier.clickable{
+                                    openApp(it)
+                                }){
                                     AppCard(it)
                                 }
                             }

@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -53,12 +54,15 @@ import org.jetbrains.compose.resources.stringResource
 import ru.kulishov.application_showcase.SelectedFile
 import ru.kulishov.application_showcase.domain.model.AppMetadataWithLogo
 import ru.kulishov.application_showcase.domain.model.Category
+import ru.kulishov.application_showcase.domain.model.Photo
 import ru.kulishov.application_showcase.domain.model.StoryWithPhoto
 import ru.kulishov.application_showcase.presentation.navigation.NavigationRoutings
 import ru.kulishov.application_showcase.presentation.uikit.AddCard
 import ru.kulishov.application_showcase.presentation.uikit.AppCard
 import ru.kulishov.application_showcase.presentation.uikit.CategoryButton
 import ru.kulishov.application_showcase.presentation.uikit.LoadingElement
+import ru.kulishov.application_showcase.presentation.uikit.LoadingScreen
+import ru.kulishov.application_showcase.presentation.uikit.PhotoScreenUI
 import ru.kulishov.application_showcase.presentation.uikit.SearchBox
 import ru.kulishov.application_showcase.presentation.uikit.StoriesCard
 import ru.kulishov.application_showcase.toImageBitmap
@@ -66,8 +70,11 @@ import ru.kulishov.application_showcase.toImageBitmap
 @Composable
 fun HomeScreenUI(
     viewModel: HomeScreenViewModel = hiltViewModel(),
-    padding: PaddingValues
+    padding: PaddingValues,
+    openApp:(AppMetadataWithLogo)->Unit,
+    hideNavigation:(Boolean)->Unit
 ){
+    val uiState = viewModel.uiState.collectAsState()
     var categories = viewModel.category.collectAsState()
     var apps = viewModel.apps.collectAsState()
     var searchText by remember { mutableStateOf("") }
@@ -77,6 +84,8 @@ fun HomeScreenUI(
     var currentCategory by remember { mutableStateOf(-1) }
 
     var isRefreshing by remember { mutableStateOf(false) }
+
+    var currentStorie by remember { mutableStateOf(0) }
 
     LaunchedEffect(isRefreshing) {
         stories=viewModel.getStories()
@@ -88,82 +97,104 @@ fun HomeScreenUI(
 
 
 
-
-    PullToRefreshBox(
-        isRefreshing = isRefreshing,
-        onRefresh = {
-            isRefreshing=true
-        }
-    ) {
-        Column(
-            modifier = Modifier.padding(padding),
-            verticalArrangement = Arrangement.spacedBy(25.dp),
+    if(uiState.value== HomeScreenViewModel.HomeScreenUiState.Story){
+        PhotoScreenUI(emptyList<Photo>(),currentStorie,
+            stories,{
+                hideNavigation(false)
+                viewModel.closeStory()
+            },padding
+            )
+    }else{
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                isRefreshing=true
+            },
+            modifier = Modifier.padding(horizontal = 15.dp)
         ) {
-            Box{
-                Box(Modifier.padding(end = 66.dp).fillMaxWidth()){
-                    SearchBox(searchText) {
-                        searchText=it
-                        viewModel.searchApps(searchText)
+            Column(
+                modifier = Modifier.padding(padding),
+                verticalArrangement = Arrangement.spacedBy(25.dp),
+            ) {
+                Box{
+                    Box(Modifier.padding(end = 66.dp).fillMaxWidth()){
+                        SearchBox(searchText) {
+                            searchText=it
+                            viewModel.searchApps(searchText)
+                        }
+                    }
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd){
+                        Box(Modifier.size(56.dp).clip(CircleShape)){
+                            Image(painterResource(Res.drawable.avatar), "profile", modifier = Modifier.fillMaxSize())
+                        }
                     }
                 }
-                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd){
-                    Box(Modifier.size(56.dp).clip(CircleShape)){
-                        Image(painterResource(Res.drawable.avatar), "profile", modifier = Modifier.fillMaxSize())
+                if(searchText!=""){
+                    LazyColumn {
+                        items(searchApp.value){ app->
+                            val fIcon = categories.value.find { it.id== app.category}?.icon
+                            Box(Modifier.clickable{
+                                openApp(app)
+                            }){
+                                AppCard(app,fIcon)
+                            }
+
+                        }
                     }
-                }
-            }
-            if(searchText!=""){
-                LazyColumn {
-                    items(searchApp.value){ app->
-                        val fIcon = categories.value.find { it.id== app.category}?.icon
-                        AppCard(app,fIcon)
-                    }
-                }
-            }else{
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(25.dp)
-                ) {
-                    item{
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(5.dp),
-                        ) {
-                            Text(
-                                stringResource(Res.string.actual),
-                                style = MaterialTheme.typography.titleLarge
-                            )
-                            LazyRow(
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                }else{
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(25.dp)
+                    ) {
+                        item{
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(5.dp),
                             ) {
-                                items(stories) {
-                                    StoriesCard(it)
-                                }
-                                items(4){
-                                    if(stories.isEmpty()){
-                                        Box(Modifier.width(100.dp).height(145.dp).clip(RoundedCornerShape(4))){
-                                            LoadingElement()
+                                Text(
+                                    stringResource(Res.string.actual),
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+                                LazyRow(
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    itemsIndexed(stories) {index,item->
+                                        Box(
+                                            Modifier.clickable{
+                                                hideNavigation(true)
+                                                currentStorie=index
+                                                viewModel.openStory()
+                                            }
+                                        ){
+                                            StoriesCard(item)
+                                        }
+
+                                    }
+                                    items(4){
+                                        if(stories.isEmpty()){
+                                            Box(Modifier.width(100.dp).height(145.dp).clip(RoundedCornerShape(4))){
+                                                LoadingElement()
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
-                    }
-                    item {
-                        Box(){
-                            if(add.isNotEmpty()){
-                                AddCard(add[0])
-                            }else{
-                                Box(Modifier.fillMaxWidth()
-                                    .height(200.dp).clip(RoundedCornerShape(5))){
-                                    LoadingElement()
+                        item {
+                            Box(){
+                                if(add.isNotEmpty()){
+                                    AddCard(add[0])
+                                }else{
+                                    Box(Modifier.fillMaxWidth()
+                                        .height(200.dp).clip(RoundedCornerShape(5))){
+                                        LoadingElement()
+                                    }
                                 }
                             }
-                        }
 
-                    }
-                    item {
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(5.dp)
-                        ) {
+                        }
+                        item {
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
 //                            item {
 //                                Box(
 //                                    Modifier
@@ -186,59 +217,72 @@ fun HomeScreenUI(
 //                                }
 //
 //                            }
-                            item {
-                                Box(
-                                    Modifier
-                                        .clip(CircleShape)
-                                        .background(if (currentCategory==-1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainer)
-                                        .clickable{
-                                            currentCategory=-1
-                                            viewModel.getCategoryApp(-1)
-                                        },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                item {
+                                    Box(
+                                        Modifier
+                                            .clip(CircleShape)
+                                            .background(if (currentCategory==-1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainer)
+                                            .clickable{
+                                                currentCategory=-1
+                                                viewModel.getCategoryApp(-1)
+                                            },
+                                        contentAlignment = Alignment.Center
                                     ) {
-                                        Box(Modifier.size(20.dp), contentAlignment = Alignment.Center){
-                                            Icon(painterResource(Res.drawable.star_filled), "category", tint = Color.Yellow, modifier = Modifier.size(16.dp))
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Box(Modifier.size(20.dp), contentAlignment = Alignment.Center){
+                                                Icon(painterResource(Res.drawable.star_filled), "category", tint = Color.Yellow, modifier = Modifier.size(16.dp))
 
+                                            }
+                                            Text(stringResource(Res.string.popular), style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp, color =
+                                                if(currentCategory==-1) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSurface))
                                         }
-                                          Text(stringResource(Res.string.popular), style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp, color =
-                                            if(currentCategory==-1) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSurface))
                                     }
-                                }
 
-                            }
-                            items(categories.value){
-                                if(it.priority){
-                                    Box(Modifier.clip(CircleShape).clickable{
-                                        currentCategory=it.id
-                                        viewModel.getCategoryApp(it.id)
-                                    }){
-                                        CategoryButton(it,it.id==currentCategory)
+                                }
+                                items(categories.value){
+                                    if(it.priority){
+                                        Box(Modifier.clip(CircleShape).clickable{
+                                            currentCategory=it.id
+                                            viewModel.getCategoryApp(it.id)
+                                        }){
+                                            CategoryButton(it,it.id==currentCategory)
+                                        }
                                     }
+
+
                                 }
-
-
                             }
                         }
-                    }
-                    item{
-                        Column {
-                            for(app in apps.value){
-                                AppCard(app)
+                        item{
+                            if(apps.value.isEmpty()){
+                                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                    LoadingScreen()
+                                }
+                            }else {
+                                Column {
+                                    for (app in apps.value) {
+                                        Box(Modifier.clickable {
+                                            openApp(app)
+                                        }) {
+                                            AppCard(app)
+                                        }
+
+                                    }
+                                }
                             }
                         }
                     }
                 }
-            }
 
+            }
         }
+
+
     }
-    
 
 
 
