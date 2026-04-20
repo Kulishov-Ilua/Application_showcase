@@ -40,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
@@ -71,13 +72,13 @@ fun PhotoScreenUI(
             initialValue = 0f,
             targetValue = 1f,
             animationSpec = infiniteRepeatable(
-                animation = tween(10000, easing = FastOutSlowInEasing),
+                animation = tween(5000),
                 repeatMode = RepeatMode.Restart
             ),
 
         )
         LaunchedEffect(animatedValue) {
-            if (animatedValue>0.99999f) {
+            if (animatedValue>0.999993f) {
                 if(newCurrentPhoto<(stories.size-1)) newCurrentPhoto++
                 else onClose()
             }
@@ -94,7 +95,7 @@ fun PhotoScreenUI(
                             bitmap,
                             contentDescription = "photo",
                             modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
+                            filterQuality = FilterQuality.High
                         )
                     }
                 }
